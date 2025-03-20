@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yash Table Tennis Game</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    h1 {
+      color: #ffffff;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      font-size: 20px;
+      padding: 15px 30px;
+      margin: 10px;
+      border: none;
+      cursor: pointer;
+      border-radius: 10px;
+      box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+      transition: 0.3s;
+    }
+    button:hover {
+      background-color: #0056b3;
+      transform: scale(1.05);
+    }
+    canvas {
+      background-color: #2b7a78;
+      display: block;
+      margin: 20px auto;
+      border: 10px solid #17252a;
+    }
+    .controls {
+      display: none;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="lobby">
+    <h1>Yash Table Tennis Game</h1>
+    <button onclick="startGame('ai')">Player vs AI</button>
+    <button onclick="startGame('player')">Player vs Player</button>
+  </div>
+
+  <canvas id="gameCanvas" width="800" height="400" style="display:none;"></canvas>
+  <div class="controls" id="controls">
+    <button onclick="restartGame()">Restart</button>
+    <button onclick="goHome()">Home</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let gameMode = 'ai';
+
+    const paddleWidth = 10, paddleHeight = 100;
+    let leftPaddleY = canvas.height / 2 - paddleHeight / 2;
+    let rightPaddleY = canvas.height / 2 - paddleHeight / 2;
+    let leftScore = 0, rightScore = 0;
+
+    let ballX = canvas.width / 2, ballY = canvas.height / 2;
+    let ballSpeedX = 5, ballSpeedY = 5;
+    let gameTime = 0;
+
+    function startGame(mode) {
+      gameMode = mode;
+      document.getElementById('lobby').style.display = 'none';
+      canvas.style.display = 'block';
+      document.getElementById('controls').style.display = 'block';
+      resetBall();
+      setInterval(gameLoop, 1000 / 60);
+      setInterval(() => gameTime++, 1000);
+    }
+
+    function goHome() {
+      location.reload();
+    }
+
+    function restartGame() {
+      leftScore = 0;
+      rightScore = 0;
+      gameTime = 0;
+      resetBall();
+    }
+
+    function drawRect(x, y, w, h, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w, h);
+    }
+
+    function drawBall(x, y, size, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawNet() {
+      for (let i = 0; i < canvas.height; i += 20) {
+        drawRect(canvas.width / 2 - 1, i, 2, 10, 'white');
+      }
+    }
+
+    function drawScore() {
+      ctx.fillStyle = 'white';
+      ctx.font = '40px Arial';
+      ctx.fillText(leftScore, canvas.width / 4, 50);
+      ctx.fillText(rightScore, (canvas.width / 4) * 3, 50);
+    }
+
+    function drawPaddle(x, y, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, paddleWidth, paddleHeight);
+    }
+
+    function update() {
+      ballX += ballSpeedX;
+      ballY += ballSpeedY;
+
+      if (ballY <= 0 || ballY >= canvas.height) ballSpeedY = -ballSpeedY;
+
+      if (ballX <= paddleWidth) {
+        if (ballY > leftPaddleY && ballY < leftPaddleY + paddleHeight) ballSpeedX = -ballSpeedX;
+        else { rightScore++; checkWinner(); resetBall(); }
+      }
+
+      if (ballX >= canvas.width - paddleWidth) {
+        if (ballY > rightPaddleY && ballY < rightPaddleY + paddleHeight) ballSpeedX = -ballSpeedX;
+        else { leftScore++; checkWinner(); resetBall(); }
+      }
+
+      if (gameMode === 'ai') rightPaddleY = ballY - paddleHeight / 2;
+    }
+
+    function checkWinner() {
+      if (leftScore >= 10) alert('🎉 Congratulations! You Win!');
+      else if (rightScore >= 10) alert('Oops! You Lost!');
+    }
+
+    function resetBall() {
+      ballX = canvas.width / 2;
+      ballY = canvas.height / 2;
+      ballSpeedX = 5;
+      ballSpeedY = 5;
+    }
+
+    function render() {
+      drawRect(0, 0, canvas.width, canvas.height, '#2b7a78');
+      drawNet();
+      drawScore();
+      drawPaddle(0, leftPaddleY, '#ff0000');
+      drawPaddle(canvas.width - paddleWidth, rightPaddleY, '#000000');
+      drawBall(ballX, ballY, 10, 'white');
+    }
+
+    function gameLoop() {
+      update();
+      render();
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseY = e.clientY - rect.top;
+      leftPaddleY = mouseY - paddleHeight / 2;
+    });
+  </script>
+</body>
+</html>
